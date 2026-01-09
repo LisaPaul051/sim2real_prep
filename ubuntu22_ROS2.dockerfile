@@ -28,6 +28,8 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/r
 # Install ROS 2 + dev tools
 RUN apt-get update && apt-get install -y \
     ros-humble-ros-base \
+    ros-humble-demo-nodes-cpp \
+    ros-humble-demo-nodes-py \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-pip \
