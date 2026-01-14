@@ -37,6 +37,13 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+# Install ROS 2 Gazebo packages
+RUN apt-get update && apt-get install -y \
+    ros-humble-ros-base \
+    ros-humble-ros-gz \
+    ros-humble-rmw-cyclonedds-cpp \
+    && rm -rf /var/lib/apt/lists/*
+
 # Init rosdep (safe in docker; ignore error if already initialized)
 RUN rosdep init || true
 RUN rosdep update
