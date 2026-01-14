@@ -37,9 +37,20 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+# OSRF Gazebo / Ignition repo (needed for ignition-gazebo6 on Jammy)
+RUN curl -sSL https://packages.osrfoundation.org/gazebo.gpg \
+    | gpg --dearmor -o /usr/share/keyrings/gazebo-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/gazebo-archive-keyring.gpg] \
+    http://packages.osrfoundation.org/gazebo/ubuntu-stable $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+    > /etc/apt/sources.list.d/gazebo-stable.list
+
+# Install Gazebo Fortress
+RUN apt-get update && apt-get install -y \
+    gz-fortress \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install ROS 2 Gazebo packages
 RUN apt-get update && apt-get install -y \
-    ros-humble-ros-base \
     ros-humble-ros-gz \
     ros-humble-rmw-cyclonedds-cpp \
     && rm -rf /var/lib/apt/lists/*

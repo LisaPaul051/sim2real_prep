@@ -1,0 +1,7 @@
+# Gazebo (Ignition) -> ROS 2 bridges
+# Create ROS /clock from Gazebo's world-scoped clock.
+- ros_topic_name: /clock
+  gz_topic_name: /world/panda_world/clock
+  ros_type_name: rosgraph_msgs/msg/Clock
+  gz_type_name: gz.msgs.Clock
+  direction: GZ_TO_ROS

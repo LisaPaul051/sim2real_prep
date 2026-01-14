@@ -3,15 +3,71 @@ services:
     build:
       context: .
       dockerfile: ubuntu22_ROS2.dockerfile
-    image:
-     ubuntu2204-ros2-humble
+    image: ubuntu2204-ros2-humble
     container_name: ros2_gazebo_dev
     network_mode: host
     environment:
       - DISPLAY=${DISPLAY}
+      - XAUTHORITY=/tmp/.docker.xauth
+      - QT_X11_NO_MITSHM=1
+      - LIBGL_ALWAYS_INDIRECT=0
+
+      # ROS 2 DDS settings (must match bridge)
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - ROS_LOCALHOST_ONLY=1
+      - ROS2_DISABLE_DAEMON=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:ro
+      - ~/ros2_ws:/root/ws
+
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+
+    stdin_open: true
+    tty: true
+
+  gazebo:
+    image: ubuntu2204-ros2-humble
+    container_name: gz
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=/tmp/.docker.xauth
       - QT_X11_NO_MITSHM=1
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ~/ros2_ws:/root/ws
-    stdin_open: true
-    tty: true
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:ro
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    command: bash -lc "ign gazebo -v 4 -r"
+
+
+  bridge:
+    image: ubuntu2204-ros2-humble
+    container_name: ros_gz_bridge
+    network_mode: host
+    restart: unless-stopped
+    command: |
+      bash -lc "
+      source /opt/ros/humble/setup.bash &&
+      export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp &&
+      export ROS_LOCALHOST_ONLY=1 &&
+      export ROS2_DISABLE_DAEMON=1 &&
+      # Wait until Gazebo is actually publishing the clock topic
+      until ign topic -l | grep -q '/world/panda_world/clock'; do
+        echo '[bridge] waiting for Gazebo clock...'
+        sleep 1
+      done &&
+      ros2 run ros_gz_bridge parameter_bridge /world/panda_world/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock
+      "
+    depends_on:
+      - gazebo
+
+
