@@ -82,8 +82,20 @@ services:
     devices:
       - /dev/dri:/dev/dri
     command: >
-      bash -lc "source /opt/ros/humble/setup.bash &&
-      rviz2 --ros-args
-      -p use_sim_time:=true
-      -r /clock:=/world/world_demo/clock
-      -r /tf:=/model/tugbot/tf"
+      bash -lc '
+      source /opt/ros/humble/setup.bash;
+      export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp;
+      export ROS_LOCALHOST_ONLY=1;
+      export ROS2_DISABLE_DAEMON=1;
+
+      echo "[rviz] waiting for /world/world_demo/clock ...";
+      until ros2 topic list | grep -q "^/world/world_demo/clock$"; do sleep 1; done;
+
+      echo "[rviz] waiting for /model/tugbot/tf ...";
+      until ros2 topic list | grep -q "^/model/tugbot/tf$"; do sleep 1; done;
+
+      exec rviz2 --ros-args
+        -p use_sim_time:=true
+        -r /clock:=/world/world_demo/clock
+        -r /tf:=/model/tugbot/tf
+      '
