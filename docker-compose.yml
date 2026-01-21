@@ -69,4 +69,21 @@ services:
     depends_on:
       - gazebo
 
-
+  rviz:
+    image: ubuntu2204-ros2-humble
+    container_name: rviz
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - QT_QPA_PLATFORM=xcb
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    devices:
+      - /dev/dri:/dev/dri
+    command: >
+      bash -lc "source /opt/ros/humble/setup.bash &&
+      rviz2 --ros-args
+      -p use_sim_time:=true
+      -r /clock:=/world/world_demo/clock
+      -r /tf:=/model/tugbot/tf"
